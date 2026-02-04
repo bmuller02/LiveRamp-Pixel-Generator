@@ -29,7 +29,9 @@ export const generatePixelString = (state: PixelState): string => {
     params.push('site=site');
     params.push(`eventtype=${state.eventType}`);
     params.push(`eventname=${state.eventName}`);
-    params.push(`eventvalue=${state.eventValue}`);
+    if (state.eventValue) {
+      params.push(`eventvalue=${state.eventValue}`);
+    }
   } else {
     return FALLBACK_ERROR;
   }

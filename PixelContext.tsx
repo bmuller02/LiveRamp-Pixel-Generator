@@ -39,7 +39,7 @@ export const PixelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     mediaPartner: '',
     siteEvent: {
       type: 'view',
-      name: 'pagename',
+      name: '{{pagename macro}}',
       value: '',
     },
     advertiserName: '',

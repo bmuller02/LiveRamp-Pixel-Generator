@@ -19,7 +19,7 @@ const App: React.FC = () => {
               Horizon LiveRamp Pixel
             </h1>
             <p className="mt-3 text-zinc-600 max-w-lg mx-auto">
-              Generate 1x1 tracking pixels for Media or Site implementation with strict validation.
+              Generate 1x1 tracking pixels for Media or Site implementation.
             </p>
           </header>
 

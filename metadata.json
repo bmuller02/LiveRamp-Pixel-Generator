@@ -1,5 +1,5 @@
 {
   "name": "Horizon LiveRamp Pixel Generator",
-  "description": "A robust tool for generating 1x1 tracking pixels for digital advertising with strict type safety and schema validation.",
+  "description": "A tool for generating LiveRamp tracking pixels for media placements or site events with strict schema validation.",
   "requestFramePermissions": []
 }
