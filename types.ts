@@ -13,6 +13,14 @@ export interface AdServerDefinition {
   macros: AdServerMacroConfig;
 }
 
+export interface HardcodeRow {
+  advertiserID: string;
+  campaignID: string;
+  siteID: string;
+  placementID: string;
+  creativeID: string;
+}
+
 export interface PixelStateCommon {
   liveRampId: string; // Must be exactly 6 digits
   advertiserName: string;
@@ -22,6 +30,8 @@ export interface PixelStateMedia extends PixelStateCommon {
   pixelType: 'MEDIA';
   selectedPartner: string;
   macros: AdServerMacroConfig;
+  isHardcode?: boolean;
+  hardcodeRows?: HardcodeRow[];
 }
 
 export interface PixelStateSite extends PixelStateCommon {

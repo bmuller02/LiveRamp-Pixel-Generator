@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react';
-import { PixelState, PixelStateMedia, PixelStateSite } from './types';
-import { AD_SERVERS } from './constants';
+import { PixelState, PixelStateMedia, PixelStateSite, HardcodeRow } from './types';
+import { AD_SERVERS, HARD_CODE_PARTNER_KEY } from './constants';
 
 // Internal state for the wizard (looser than the strict PixelState)
 interface WizardState {
@@ -8,6 +8,7 @@ interface WizardState {
   liveRampId: string;
   pixelType: 'MEDIA' | 'SITE' | null;
   mediaPartner: string; // Key in AD_SERVERS
+  hardcodeRows: HardcodeRow[];
   siteEvent: {
     type: string;
     name: string;
@@ -21,6 +22,7 @@ interface PixelContextType {
   setLiveRampId: (id: string) => void;
   setPixelType: (type: 'MEDIA' | 'SITE') => void;
   setMediaPartner: (partner: string) => void;
+  setHardcodeRows: (rows: HardcodeRow[]) => void;
   setSiteEvent: (field: 'type' | 'name' | 'value', value: string) => void;
   setAdvertiserName: (name: string) => void;
   nextStep: () => void;
@@ -37,6 +39,7 @@ export const PixelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     liveRampId: '',
     pixelType: null,
     mediaPartner: '',
+    hardcodeRows: [],
     siteEvent: {
       type: '',
       name: '',
@@ -48,6 +51,7 @@ export const PixelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   const setLiveRampId = (id: string) => setState(prev => ({ ...prev, liveRampId: id }));
   const setPixelType = (type: 'MEDIA' | 'SITE') => setState(prev => ({ ...prev, pixelType: type }));
   const setMediaPartner = (partner: string) => setState(prev => ({ ...prev, mediaPartner: partner }));
+  const setHardcodeRows = (rows: HardcodeRow[]) => setState(prev => ({ ...prev, hardcodeRows: rows }));
   const setSiteEvent = (field: 'type' | 'name' | 'value', value: string) => {
     setState(prev => ({
       ...prev,
@@ -70,6 +74,9 @@ export const PixelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }
     if (state.step === 3) {
       if (state.pixelType === 'MEDIA') {
+        if (state.mediaPartner === HARD_CODE_PARTNER_KEY) {
+          return state.hardcodeRows.length > 0;
+        }
         // Strict check: Media Partner must exist in AD_SERVERS
         return state.mediaPartner !== '' && !!AD_SERVERS[state.mediaPartner];
       }
@@ -103,6 +110,8 @@ export const PixelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         pixelType: 'MEDIA',
         selectedPartner: partnerDef.name,
         macros: partnerDef.macros,
+        isHardcode: state.mediaPartner === HARD_CODE_PARTNER_KEY,
+        hardcodeRows: state.hardcodeRows,
       };
       return pixelState;
     } else {
@@ -124,6 +133,7 @@ export const PixelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         setLiveRampId,
         setPixelType,
         setMediaPartner,
+        setHardcodeRows,
         setSiteEvent,
         setAdvertiserName,
         nextStep,

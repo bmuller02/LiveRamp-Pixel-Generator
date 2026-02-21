@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { usePixelStore } from '../PixelContext';
 import { generatePixelString } from '../utils';
+import { HARD_CODE_PARTNER_KEY } from '../constants';
 import { useHasMounted } from '../hooks/useHasMounted';
 
 // Simple SVG Icons
@@ -26,9 +27,9 @@ const PixelPreview: React.FC = () => {
     if (pixelState) {
       setUrl(generatePixelString(pixelState));
      } else if (state.liveRampId && state.liveRampId.length === 6) {
-       setUrl(`<img src="https://di.rlcdn.com/${state.liveRampId}.gif?pdata=..."/>`);
+       setUrl(`<img src="https://di.rlcdn.com/${state.liveRampId}.gif?pdata="/>`);
     } else {
-       setUrl(`<img src="https://di.rlcdn.com/[ID].gif?pdata=..."/>`);
+       setUrl(`<img src="https://di.rlcdn.com/[ID].gif?pdata="/>`);
     }
   }, [pixelState, state.liveRampId]);
 
@@ -40,6 +41,7 @@ const PixelPreview: React.FC = () => {
   };
 
   if (!hasMounted) return null;
+  if (state.pixelType === 'MEDIA' && state.mediaPartner === HARD_CODE_PARTNER_KEY) return null;
 
   return (
     <div className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-zinc-200 shadow-sm supports-[backdrop-filter]:bg-white/60">

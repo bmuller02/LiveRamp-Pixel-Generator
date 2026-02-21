@@ -1,15 +1,18 @@
 "use client";
 
 import React from 'react';
+import * as XLSX from 'xlsx';
 import { usePixelStore } from '../../PixelContext';
 import DownloadButton from '../DownloadButton';
-import { generateFileName, generatePixelString } from '../../utils';
+import { generateFileName, generatePixelString, generateHardcodeFileName, generateHardcodePixelRows } from '../../utils';
 import { useHasMounted } from '../../hooks/useHasMounted';
+import { AD_SERVERS, HARD_CODE_PARTNER_KEY } from '../../constants';
 
 const Step5Summary: React.FC = () => {
   const { getConstructedState, state } = usePixelStore();
   const hasMounted = useHasMounted();
   const pixelState = getConstructedState();
+    const isHardcode = state.pixelType === 'MEDIA' && state.mediaPartner === HARD_CODE_PARTNER_KEY;
 
   if (!hasMounted) return null;
 
@@ -21,8 +24,41 @@ const Step5Summary: React.FC = () => {
     );
   }
 
-  const fileName = generateFileName(pixelState);
-  const pixelString = generatePixelString(pixelState);
+    const fileName = isHardcode
+        ? generateHardcodeFileName(state.advertiserName)
+        : generateFileName(pixelState);
+    const pixelString = isHardcode ? '' : generatePixelString(pixelState);
+    const partnerLabel = state.pixelType === 'MEDIA'
+        ? (AD_SERVERS[state.mediaPartner]?.name ?? state.mediaPartner)
+        : `${state.siteEvent.type} / ${state.siteEvent.name}`;
+
+    const handleDownloadExcel = () => {
+        const pixels = generateHardcodePixelRows(state.liveRampId, state.hardcodeRows);
+        const rows = state.hardcodeRows.map((row, index) => ({
+            'Advertiser ID': row.advertiserID,
+            'Campaign ID': row.campaignID,
+            'Site ID': row.siteID,
+            'Creative ID': row.creativeID,
+            'Placement ID': row.placementID,
+            Pixel: pixels[index] ?? '',
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(rows, {
+            header: ['Advertiser ID', 'Campaign ID', 'Site ID', 'Creative ID', 'Placement ID', 'Pixel'],
+        });
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Pixels');
+        const arrayBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        const blob = new Blob([arrayBuffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = generateHardcodeFileName(state.advertiserName);
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    };
 
   return (
     <>
@@ -52,7 +88,7 @@ const Step5Summary: React.FC = () => {
                 <div>
                     <span className="text-zinc-500 text-xs font-medium uppercase tracking-wider">Context</span>
                     <div className="font-medium text-zinc-900 mt-0.5">
-                         {state.pixelType === 'MEDIA' ? state.mediaPartner : `${state.siteEvent.type} / ${state.siteEvent.name}`}
+                         {partnerLabel}
                     </div>
                 </div>
             </div>
@@ -65,15 +101,27 @@ const Step5Summary: React.FC = () => {
             </div>
         </div>
 
-        <div>
-           <span className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-2 block">Pixel Code</span>
-           <code className="block w-full rounded-md border border-zinc-900 bg-zinc-950 px-4 py-3 text-xs font-mono text-emerald-400 break-all leading-relaxed shadow-sm">
-            {pixelString}
-           </code>
-        </div>
+          {!isHardcode && (
+             <div>
+                 <span className="text-zinc-500 text-xs font-medium uppercase tracking-wider mb-2 block">Pixel Code</span>
+                 <code className="block w-full rounded-md border border-zinc-900 bg-zinc-950 px-4 py-3 text-xs font-mono text-emerald-400 break-all leading-relaxed shadow-sm">
+                  {pixelString}
+                 </code>
+             </div>
+          )}
         
-        <div className="pt-2 space-y-6">
-            <DownloadButton pixelState={pixelState} />
+                <div className="pt-2 space-y-6">
+                        {isHardcode ? (
+                            <button
+                                type="button"
+                                onClick={handleDownloadExcel}
+                                className="inline-flex w-full items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-white bg-emerald-600 text-white hover:bg-emerald-700 h-11 px-8 shadow-sm"
+                            >
+                                Download .xlsx File
+                            </button>
+                        ) : (
+                            <DownloadButton pixelState={pixelState} />
+                        )}
 
             <div className="rounded-md bg-blue-50 p-4 border border-blue-100">
                 <p className="text-sm text-blue-800 mb-3">

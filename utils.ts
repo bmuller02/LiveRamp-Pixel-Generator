@@ -1,42 +1,73 @@
-import { PixelState, isMediaPixel, isSitePixel } from './types';
+import { PixelState, isMediaPixel, isSitePixel, HardcodeRow } from './types';
 import { BASE_URL_TEMPLATE, PARAMETER_DELIMITER, FALLBACK_ERROR } from './constants';
 
 /**
  * Injects the LiveRamp ID and constructs the final URL string.
  */
+const buildBaseUrl = (liveRampId: string) => {
+  return BASE_URL_TEMPLATE.replace('{{ID}}', liveRampId || '[ID]');
+};
+
+const buildMediaParams = (macros: {
+  advertiserID: string;
+  campaignID: string;
+  siteID: string;
+  placementID: string;
+  creativeID: string;
+}) => {
+  return [
+    'media=media',
+    `advertiserID=${macros.advertiserID}`,
+    `campaignID=${macros.campaignID}`,
+    `siteID=${macros.siteID}`,
+    `placementID=${macros.placementID}`,
+    `creativeID=${macros.creativeID}`,
+  ];
+};
+
+const buildSiteParams = (state: PixelState) => {
+  if (!isSitePixel(state)) return [];
+  const params = ['site=site', `eventtype=${state.eventType}`, `eventname=${state.eventName}`];
+  if (state.eventValue) {
+    params.push(`eventvalue=${state.eventValue}`);
+  }
+  return params;
+};
+
+const buildPixelUrl = (liveRampId: string, params: string[]) => {
+  return `${buildBaseUrl(liveRampId)}${params.join(PARAMETER_DELIMITER)}`;
+};
+
 export const generatePixelString = (state: PixelState): string => {
   if (!state.liveRampId || state.liveRampId.length !== 6 || !/^\d+$/.test(state.liveRampId)) {
     // While the UI should prevent this, we add a safeguard here or return the template
     // For this utility, we assume validation happens upstream or we return a malformed string safe for preview
   }
 
-  const baseUrl = BASE_URL_TEMPLATE.replace('{{ID}}', state.liveRampId || '[ID]');
   let params: string[] = [];
 
   if (isMediaPixel(state)) {
-    params.push('media=media');
-    // Ensure strict ordering or keys if required, otherwise iterate standard keys
-    const { advertiserID, campaignID, siteID, placementID, creativeID } = state.macros;
-    
-    // We construct key=value strings
-    params.push(`advertiserID=${advertiserID}`);
-    params.push(`campaignID=${campaignID}`);
-    params.push(`siteID=${siteID}`);
-    params.push(`placementID=${placementID}`);
-    params.push(`creativeID=${creativeID}`);
-    
+    params = buildMediaParams(state.macros);
   } else if (isSitePixel(state)) {
-    params.push('site=site');
-    params.push(`eventtype=${state.eventType}`);
-    params.push(`eventname=${state.eventName}`);
-    if (state.eventValue) {
-      params.push(`eventvalue=${state.eventValue}`);
-    }
+    params = buildSiteParams(state);
   } else {
     return FALLBACK_ERROR;
   }
 
-  return `<img src="${baseUrl}${params.join(PARAMETER_DELIMITER)}"/>`;
+  return `<img src="${buildPixelUrl(state.liveRampId, params)}"/>`;
+};
+
+export const generateHardcodePixelRows = (liveRampId: string, rows: HardcodeRow[]) => {
+  return rows.map((row) => {
+    const params = buildMediaParams({
+      advertiserID: row.advertiserID,
+      campaignID: row.campaignID,
+      siteID: row.siteID,
+      placementID: row.placementID,
+      creativeID: row.creativeID,
+    });
+    return `<img src="${buildPixelUrl(liveRampId, params)}"/>`;
+  });
 };
 
 /**
@@ -61,4 +92,10 @@ export const generateFileName = (state: PixelState): string => {
   parts.push(date);
 
   return `${parts.join('_')}.txt`;
+};
+
+export const generateHardcodeFileName = (advertiserName: string): string => {
+  const date = new Date().toISOString().split('T')[0];
+  const sanitizedAdvertiser = advertiserName.replace(/[^a-zA-Z0-9-_]/g, '');
+  return `Horizon-LiveRamp-Pixel_MEDIA_Hardcode_${sanitizedAdvertiser}_${date}.xlsx`;
 };
