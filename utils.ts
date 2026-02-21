@@ -36,7 +36,7 @@ export const generatePixelString = (state: PixelState): string => {
     return FALLBACK_ERROR;
   }
 
-  return `${baseUrl}${params.join(PARAMETER_DELIMITER)}`;
+  return `<img src="${baseUrl}${params.join(PARAMETER_DELIMITER)}"/>`;
 };
 
 /**

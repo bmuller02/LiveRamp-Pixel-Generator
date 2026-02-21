@@ -25,10 +25,10 @@ const PixelPreview: React.FC = () => {
   useEffect(() => {
     if (pixelState) {
       setUrl(generatePixelString(pixelState));
-    } else if (state.liveRampId && state.liveRampId.length === 6) {
-       setUrl(`https://di.rlcdn.com/${state.liveRampId}.gif?pdata=...`);
+     } else if (state.liveRampId && state.liveRampId.length === 6) {
+       setUrl(`<img src="https://di.rlcdn.com/${state.liveRampId}.gif?pdata=..."/>`);
     } else {
-       setUrl('https://di.rlcdn.com/[ID].gif?pdata=...');
+       setUrl(`<img src="https://di.rlcdn.com/[ID].gif?pdata=..."/>`);
     }
   }, [pixelState, state.liveRampId]);
 

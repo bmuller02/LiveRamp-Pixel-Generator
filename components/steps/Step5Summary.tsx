@@ -80,7 +80,7 @@ const Step5Summary: React.FC = () => {
                     If you plan to implement this pixel you've just created, you MUST email a copy to the Platform Solutions team. Click the button below to get this email started.
                 </p>
                 <a
-                    href="mailto:platformsolutions@horizonmedia.com?subject=New LiveRamp pixel created from generator"
+                    href="mailto:platformsolutions@horizonmedia.com?subject=New%20LiveRamp%20pixel%20created%20from%20generator&body=Hi%20Platform%20Solutions%20team%2C%0D%0A%0D%0APlease%20see%20attached%20for%20a%20new%20LiveRamp%20pixel%20I've%20created%20using%20the%20generator."
                     className="inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-white transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-white text-zinc-900 border border-zinc-200 hover:bg-zinc-100 h-10 px-4 py-2 w-full sm:w-auto shadow-sm"
                 >
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-2"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>

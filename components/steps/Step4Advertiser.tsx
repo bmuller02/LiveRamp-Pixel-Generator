@@ -9,7 +9,7 @@ const Step4Advertiser: React.FC = () => {
       <div className="flex flex-col space-y-1.5 p-6">
         <h3 className="text-2xl font-semibold leading-none tracking-tight">Advertiser Name</h3>
         <p className="text-sm text-zinc-500">
-          Enter the name of the advertiser. This is used for file naming and organization.
+          This is used for file naming; It does not influence the pixel script.
         </p>
       </div>
 

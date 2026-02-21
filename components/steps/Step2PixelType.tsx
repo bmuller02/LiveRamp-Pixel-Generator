@@ -15,7 +15,7 @@ const Step2PixelType: React.FC = () => {
       <div className="flex flex-col space-y-1.5 p-6">
         <h3 className="text-2xl font-semibold leading-none tracking-tight">Select Pixel Type</h3>
         <p className="text-sm text-zinc-500">
-          Is this pixel for Media (Ad Server) tracking or Site (Event) tracking?
+          Is this pixel for Media tracking or Site tracking?
         </p>
       </div>
       
@@ -30,7 +30,7 @@ const Step2PixelType: React.FC = () => {
                 <div className="flex flex-col space-y-1.5 p-6">
                     <div className="text-lg font-semibold leading-none tracking-tight">MEDIA</div>
                     <p className="text-sm text-zinc-500">
-                        For Impression/Click tracking within CM360, TTD, or other DSPs.
+                        For impression tracking. Implemented within an ad server.
                     </p>
                 </div>
             </div>
@@ -44,7 +44,7 @@ const Step2PixelType: React.FC = () => {
                 <div className="flex flex-col space-y-1.5 p-6">
                     <div className="text-lg font-semibold leading-none tracking-tight">SITE</div>
                     <p className="text-sm text-zinc-500">
-                        For Site-side events like page views, button clicks, or conversions.
+                        For on-site event tracking. Implemented within a tag management system or hardcoded on-site.
                     </p>
                 </div>
             </div>

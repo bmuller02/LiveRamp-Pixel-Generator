@@ -1,6 +1,6 @@
 import { AdServerDefinition } from './types';
 
-export const BASE_URL_TEMPLATE = "https://di.rlcdn.com/{{ID}}.gif?pdata=";
+export const BASE_URL_TEMPLATE = `<img src="https://di.rlcdn.com/{{ID}}.gif?pdata=...`;
 export const PARAMETER_DELIMITER = ",";
 
 export const FALLBACK_ERROR = "No available option for your value specified. Please reach out to the Platform Solutions team.";
@@ -24,6 +24,16 @@ export const AD_SERVERS: Record<string, AdServerDefinition> = {
       siteID: "%%TTD_PARTNERID%%",
       placementID: "%%TTD_ADGROUPID%%",
       creativeID: "%%TTD_CREATIVEID%%",
+    },
+  },
+  INNOVID: {
+    name: "Innovid",
+    macros: {
+      advertiserID: "{iv_advertiserid}",
+      campaignID: "{iv_campaignid}",
+      siteID: "{iv_publisherid}",
+      placementID: "{iv_placementid}",
+      creativeID: "{iv_creativeid}",
     },
   },
 };

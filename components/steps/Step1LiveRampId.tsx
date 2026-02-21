@@ -17,7 +17,8 @@ const Step1LiveRampId: React.FC = () => {
       <div className="flex flex-col space-y-1.5 p-6">
         <h3 className="text-2xl font-semibold leading-none tracking-tight">Enter LiveRamp ID</h3>
         <p className="text-sm text-zinc-500">
-          Please enter the 6-digit configuration ID provided by LiveRamp.
+          Please enter the account-specific and site/media-specific 6-digit configuration ID provided by LiveRamp.
+          If you're not sure, you can reach out to the Platform Solutions team for help.
         </p>
       </div>
       

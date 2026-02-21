@@ -38,8 +38,8 @@ export const PixelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     pixelType: null,
     mediaPartner: '',
     siteEvent: {
-      type: 'view',
-      name: '{{pagename macro}}',
+      type: '',
+      name: '',
       value: '',
     },
     advertiserName: '',
