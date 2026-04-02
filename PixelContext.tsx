@@ -1,10 +1,12 @@
 import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react';
-import { PixelState, PixelStateMedia, PixelStateSite, HardcodeRow } from './types';
-import { AD_SERVERS, HARD_CODE_PARTNER_KEY } from './constants';
+import { PixelState, PixelStateMedia, PixelStateSite, HardcodeRow, GeneratorType } from './types';
+import { AD_SERVERS, HARD_CODE_PARTNER_KEY, CONNECT_AD_SERVERS } from './constants';
 
 // Internal state for the wizard (looser than the strict PixelState)
 interface WizardState {
   step: number;
+  generatorType: GeneratorType | null;
+  // LiveRamp fields
   liveRampId: string;
   pixelType: 'MEDIA' | 'SITE' | null;
   mediaPartner: string; // Key in AD_SERVERS
@@ -15,20 +17,29 @@ interface WizardState {
     value: string;
   };
   advertiserName: string;
+  // Connect fields
+  connectAdvertiserDisplay: string;
+  connectAdvertiserPixel: string;
+  connectAdServerKey: string;
 }
 
 interface PixelContextType {
   state: WizardState;
+  setGeneratorType: (type: GeneratorType) => void;
   setLiveRampId: (id: string) => void;
   setPixelType: (type: 'MEDIA' | 'SITE') => void;
   setMediaPartner: (partner: string) => void;
   setHardcodeRows: (rows: HardcodeRow[]) => void;
   setSiteEvent: (field: 'type' | 'name' | 'value', value: string) => void;
   setAdvertiserName: (name: string) => void;
+  setConnectAdvertiser: (displayName: string, pixelName: string) => void;
+  setConnectAdServer: (key: string) => void;
   nextStep: () => void;
   prevStep: () => void;
   canAdvance: boolean;
   getConstructedState: () => PixelState | null;
+  getConnectPixelUrl: () => string;
+  getTotalSteps: () => number;
 }
 
 const PixelContext = createContext<PixelContextType | undefined>(undefined);
@@ -36,6 +47,8 @@ const PixelContext = createContext<PixelContextType | undefined>(undefined);
 export const PixelProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [state, setState] = useState<WizardState>({
     step: 1,
+    generatorType: null,
+    // LiveRamp fields
     liveRampId: '',
     pixelType: null,
     mediaPartner: '',
@@ -46,8 +59,13 @@ export const PixelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       value: '',
     },
     advertiserName: '',
+    // Connect fields
+    connectAdvertiserDisplay: '',
+    connectAdvertiserPixel: '',
+    connectAdServerKey: '',
   });
 
+  const setGeneratorType = (type: GeneratorType) => setState(prev => ({ ...prev, generatorType: type }));
   const setLiveRampId = (id: string) => setState(prev => ({ ...prev, liveRampId: id }));
   const setPixelType = (type: 'MEDIA' | 'SITE') => setState(prev => ({ ...prev, pixelType: type }));
   const setMediaPartner = (partner: string) => setState(prev => ({ ...prev, mediaPartner: partner }));
@@ -59,25 +77,46 @@ export const PixelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     }));
   };
   const setAdvertiserName = (name: string) => setState(prev => ({ ...prev, advertiserName: name }));
+  const setConnectAdvertiser = (displayName: string, pixelName: string) => {
+    setState(prev => ({ ...prev, connectAdvertiserDisplay: displayName, connectAdvertiserPixel: pixelName }));
+  };
+  const setConnectAdServer = (key: string) => {
+    setState(prev => ({ ...prev, connectAdServerKey: prev.connectAdServerKey === key ? '' : key }));
+  };
 
   const nextStep = () => setState(prev => ({ ...prev, step: prev.step + 1 }));
   const prevStep = () => setState(prev => ({ ...prev, step: Math.max(1, prev.step - 1) }));
 
+  const getTotalSteps = () => {
+    if (state.generatorType === 'CONNECT') return 4;
+    return 6; // LiveRamp: 1(type) + 5 original steps
+  };
+
   // Validation Logic to unblock "Next"
   const canAdvance = useMemo(() => {
+    // Step 1: Generator type selection
     if (state.step === 1) {
-      // Must be exactly 6 digits
+      return state.generatorType !== null;
+    }
+
+    if (state.generatorType === 'CONNECT') {
+      if (state.step === 2) return state.connectAdvertiserPixel !== '';
+      if (state.step === 3) return state.connectAdServerKey !== '';
+      return true; // Step 4 is review
+    }
+
+    // LiveRamp flow (steps shifted by 1)
+    if (state.step === 2) {
       return /^\d{6}$/.test(state.liveRampId);
     }
-    if (state.step === 2) {
+    if (state.step === 3) {
       return state.pixelType !== null;
     }
-    if (state.step === 3) {
+    if (state.step === 4) {
       if (state.pixelType === 'MEDIA') {
         if (state.mediaPartner === HARD_CODE_PARTNER_KEY) {
           return state.hardcodeRows.length > 0;
         }
-        // Strict check: Media Partner must exist in AD_SERVERS
         return state.mediaPartner !== '' && !!AD_SERVERS[state.mediaPartner];
       }
       if (state.pixelType === 'SITE') {
@@ -85,11 +124,20 @@ export const PixelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       }
       return false;
     }
-    if (state.step === 4) {
+    if (state.step === 5) {
       return state.advertiserName.trim().length > 0;
     }
-    return true; // Step 5 is review
+    return true; // Step 6 is review
   }, [state]);
+
+  const getConnectPixelUrl = (): string => {
+    const advertiser = state.connectAdvertiserPixel || '{{ADVERTISER}}';
+    const adServerDef = CONNECT_AD_SERVERS.find(s => s.key === state.connectAdServerKey);
+    if (adServerDef) {
+      return `https://hmi-${advertiser}${adServerDef.template}`;
+    }
+    return `https://hmi-${advertiser}-{{AD SERVER}}.hrzn-nxt.com/pxl?`;
+  };
 
   // Transform Wizard State into Phase 1 PixelState
   const getConstructedState = (): PixelState | null => {
@@ -130,16 +178,21 @@ export const PixelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     <PixelContext.Provider
       value={{
         state,
+        setGeneratorType,
         setLiveRampId,
         setPixelType,
         setMediaPartner,
         setHardcodeRows,
         setSiteEvent,
         setAdvertiserName,
+        setConnectAdvertiser,
+        setConnectAdServer,
         nextStep,
         prevStep,
         canAdvance,
-        getConstructedState
+        getConstructedState,
+        getConnectPixelUrl,
+        getTotalSteps,
       }}
     >
       {children}

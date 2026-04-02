@@ -16,7 +16,7 @@ const CheckIcon = () => (
 );
 
 const PixelPreview: React.FC = () => {
-  const { getConstructedState, state } = usePixelStore();
+  const { getConstructedState, state, getConnectPixelUrl } = usePixelStore();
   const hasMounted = useHasMounted();
   const [url, setUrl] = useState('');
   const [copied, setCopied] = useState(false);
@@ -24,14 +24,16 @@ const PixelPreview: React.FC = () => {
   const pixelState = getConstructedState();
 
   useEffect(() => {
-    if (pixelState) {
+    if (state.generatorType === 'CONNECT') {
+      setUrl(getConnectPixelUrl());
+    } else if (pixelState) {
       setUrl(generatePixelString(pixelState));
-     } else if (state.liveRampId && state.liveRampId.length === 6) {
-       setUrl(`<img src="https://di.rlcdn.com/${state.liveRampId}.gif?pdata="/>`);
+    } else if (state.liveRampId && state.liveRampId.length === 6) {
+      setUrl(`<img src="https://di.rlcdn.com/${state.liveRampId}.gif?pdata="/>`);
     } else {
-       setUrl(`<img src="https://di.rlcdn.com/[ID].gif?pdata="/>`);
+      setUrl(`<img src="https://di.rlcdn.com/[ID].gif?pdata="/>`);
     }
-  }, [pixelState, state.liveRampId]);
+  }, [pixelState, state.liveRampId, state.generatorType, state.connectAdvertiserPixel, state.connectAdServerKey]);
 
   const handleCopy = () => {
     if (!url) return;
@@ -41,7 +43,8 @@ const PixelPreview: React.FC = () => {
   };
 
   if (!hasMounted) return null;
-  if (state.pixelType === 'MEDIA' && state.mediaPartner === HARD_CODE_PARTNER_KEY) return null;
+  if (state.step === 1) return null;
+  if (state.generatorType === 'LIVERAMP' && state.pixelType === 'MEDIA' && state.mediaPartner === HARD_CODE_PARTNER_KEY) return null;
 
   return (
     <div className="sticky top-0 z-50 w-full bg-white/80 backdrop-blur-md border-b border-zinc-200 shadow-sm supports-[backdrop-filter]:bg-white/60">

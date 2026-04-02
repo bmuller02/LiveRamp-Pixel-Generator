@@ -99,3 +99,7 @@ export const generateHardcodeFileName = (advertiserName: string): string => {
   const sanitizedAdvertiser = advertiserName.replace(/[^a-zA-Z0-9-_]/g, '');
   return `Horizon-LiveRamp-Pixel_MEDIA_Hardcode_${sanitizedAdvertiser}_${date}.xlsx`;
 };
+
+export const generateConnectFileName = (advertiserPixelName: string, adServerDisplayName: string): string => {
+  return `ConnectPixel_hmi-${advertiserPixelName}_${adServerDisplayName}.txt`;
+};

@@ -2,40 +2,53 @@
 
 import React from 'react';
 import { usePixelStore } from '../PixelContext';
+import Step1GeneratorType from './steps/Step1GeneratorType';
 import Step1LiveRampId from './steps/Step1LiveRampId';
 import Step2PixelType from './steps/Step2PixelType';
 import Step3Media from './steps/Step3Media';
 import Step3Site from './steps/Step3Site';
 import Step4Advertiser from './steps/Step4Advertiser';
 import Step5Summary from './steps/Step5Summary';
+import ConnectStep1Advertiser from './steps/ConnectStep1Advertiser';
+import ConnectStep2AdServer from './steps/ConnectStep2AdServer';
+import ConnectStep3Summary from './steps/ConnectStep3Summary';
 import { useHasMounted } from '../hooks/useHasMounted';
 
 const StepNavigator: React.FC = () => {
-  const { state, nextStep, prevStep, canAdvance } = usePixelStore();
+  const { state, nextStep, prevStep, canAdvance, getTotalSteps } = usePixelStore();
   const hasMounted = useHasMounted();
 
   // Prevent hydration mismatch by not rendering until mounted on client
   if (!hasMounted) return null;
 
+  const totalSteps = getTotalSteps();
+
   const renderStep = () => {
+    // Step 1 is always generator type selection
+    if (state.step === 1) return <Step1GeneratorType />;
+
+    if (state.generatorType === 'CONNECT') {
+      switch (state.step) {
+        case 2: return <ConnectStep1Advertiser />;
+        case 3: return <ConnectStep2AdServer />;
+        case 4: return <ConnectStep3Summary />;
+        default: return null;
+      }
+    }
+
+    // LiveRamp flow (original steps shifted by 1)
     switch (state.step) {
-      case 1:
-        return <Step1LiveRampId />;
-      case 2:
-        return <Step2PixelType />;
-      case 3:
-        return state.pixelType === 'MEDIA' ? <Step3Media /> : <Step3Site />;
-      case 4:
-        return <Step4Advertiser />;
-      case 5:
-        return <Step5Summary />;
-      default:
-        return null;
+      case 2: return <Step1LiveRampId />;
+      case 3: return <Step2PixelType />;
+      case 4: return state.pixelType === 'MEDIA' ? <Step3Media /> : <Step3Site />;
+      case 5: return <Step4Advertiser />;
+      case 6: return <Step5Summary />;
+      default: return null;
     }
   };
 
-  const isFinalStep = state.step === 5;
-  const totalSteps = 5;
+  const isFinalStep = state.step === totalSteps;
+  const isBeforeReview = state.step === totalSteps - 1;
 
   return (
     <div className="rounded-xl border border-zinc-200 bg-white text-zinc-950 shadow-sm flex flex-col min-h-[500px] animate-in fade-in zoom-in-95 duration-300">
@@ -71,7 +84,7 @@ const StepNavigator: React.FC = () => {
                 className={`inline-flex items-center justify-center rounded-md text-sm font-medium transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-zinc-950 focus-visible:ring-offset-2 disabled:opacity-50 disabled:pointer-events-none ring-offset-white bg-zinc-900 text-zinc-50 hover:bg-zinc-900/90 h-10 px-4 py-2 ml-auto
                     ${!canAdvance ? 'opacity-50 cursor-not-allowed' : ''}`}
             >
-                {state.step === 4 ? 'Review Configuration' : 'Next Step'}
+                {isBeforeReview ? 'Review Configuration' : 'Next Step'}
             </button>
         </div>
       ) : (

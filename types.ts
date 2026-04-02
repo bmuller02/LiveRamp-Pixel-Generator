@@ -1,4 +1,16 @@
+export type GeneratorType = 'LIVERAMP' | 'CONNECT';
 export type PixelType = 'MEDIA' | 'SITE';
+
+export interface ConnectAdvertiser {
+  displayName: string;
+  pixelName: string;
+}
+
+export interface ConnectAdServer {
+  key: string;
+  displayName: string;
+  template: string;
+}
 
 export interface AdServerMacroConfig {
   advertiserID: string;
