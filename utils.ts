@@ -1,5 +1,5 @@
 import { PixelState, isMediaPixel, isSitePixel, HardcodeRow } from './types';
-import { BASE_URL_TEMPLATE, PARAMETER_DELIMITER, FALLBACK_ERROR } from './constants';
+import { BASE_URL_TEMPLATE, PARAMETER_DELIMITER, FALLBACK_ERROR, AMAZON_ADAPTER_URL } from './constants';
 
 /**
  * Injects the LiveRamp ID and constructs the final URL string.
@@ -47,6 +47,10 @@ export const generatePixelString = (state: PixelState): string => {
   let params: string[] = [];
 
   if (isMediaPixel(state)) {
+    if (state.selectedPartner === 'Amazon') {
+      return AMAZON_ADAPTER_URL;
+    }
+
     params = buildMediaParams(state.macros);
   } else if (isSitePixel(state)) {
     params = buildSiteParams(state);

@@ -3,16 +3,37 @@
 import React, { useRef, useState } from 'react';
 import * as XLSX from 'xlsx';
 import { usePixelStore } from '../../PixelContext';
-import { AD_SERVERS, HARD_CODE_PARTNER_KEY } from '../../constants';
+import { AD_SERVERS, HARD_CODE_PARTNER_KEY, LIVERAMP_AMAZON_PARTNER_KEY } from '../../constants';
 import { useHasMounted } from '../../hooks/useHasMounted';
 
 const Step3Media: React.FC = () => {
-  const { state, setMediaPartner, setHardcodeRows } = usePixelStore();
+  const { state, setMediaPartner, setHardcodeRows, acknowledgeMediaAmazonWarning } = usePixelStore();
   const hasMounted = useHasMounted();
   const partners = React.useMemo(() => Object.entries(AD_SERVERS), []);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [uploadError, setUploadError] = useState('');
   const [uploadedCount, setUploadedCount] = useState(0);
+  const showAmazonWarning = state.mediaPartner === LIVERAMP_AMAZON_PARTNER_KEY && !state.mediaAmazonWarningAcknowledged;
+  const warningIframeDoc = `<!doctype html>
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <style>
+      body {
+        margin: 0;
+        padding: 16px;
+        background: #fef2f2;
+        color: #7f1d1d;
+        font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, sans-serif;
+        font-size: 14px;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    You have selected Amazon as the partner for this LiveRamp media pixel. While Amazon does allow advertisers to measure with LiveRamp, they do not allow it via the traditional pixel method and instead require the use of their server-to-server (S2S) "Adapter URL" method, due to environment limitations and privacy standards. Therefore, the script you will see after acknowledging this message will not look like a traditional LiveRamp pixel. To use it, simply send the LiveRamp Adapter URL to Amazon instructing them on which placements to append it.
+  </body>
+</html>`;
 
   const isHardcodeSelected = state.mediaPartner === HARD_CODE_PARTNER_KEY;
   const templateHeaders = ['Advertiser ID', 'Campaign ID', 'Site ID', 'Creative ID', 'Placement ID'];
@@ -217,6 +238,35 @@ const Step3Media: React.FC = () => {
           )}
         </div>
       </div>
+
+      {showAmazonWarning && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-zinc-900/50 p-4">
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="liveramp-amazon-warning-title"
+            className="w-full max-w-2xl rounded-xl border border-red-200 bg-red-50 p-6 shadow-xl"
+          >
+            <h4 id="liveramp-amazon-warning-title" className="text-lg font-semibold text-red-900">
+              FYI
+            </h4>
+            <iframe
+              title="LiveRamp Amazon warning"
+              srcDoc={warningIframeDoc}
+              className="mt-3 h-52 w-full rounded-md border border-red-200 bg-red-50"
+            />
+            <div className="mt-6 flex justify-end">
+              <button
+                type="button"
+                onClick={acknowledgeMediaAmazonWarning}
+                className="inline-flex items-center justify-center rounded-md bg-red-700 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-red-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-700 focus-visible:ring-offset-2"
+              >
+                Acknowledged
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };

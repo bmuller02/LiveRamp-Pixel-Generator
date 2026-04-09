@@ -6,6 +6,11 @@ export const PARAMETER_DELIMITER = ",";
 export const FALLBACK_ERROR = "No available option for your value specified. Please reach out to the Platform Solutions team.";
 
 export const HARD_CODE_PARTNER_KEY = 'HARD_CODE';
+export const CONNECT_AMAZON_ADAPTER_KEY = 'AMAZON ADAPTER URL';
+export const CONNECT_AMAZON_STANDARD_KEY = 'AMAZON';
+export const LIVERAMP_AMAZON_PARTNER_KEY = 'AMAZON';
+export const AMAZON_ADAPTER_URL = 'https://s.amazon-adsystem.com/adapt/hzn32810/';
+export const AMAZON_INVENTORIES_GUIDE_PATH = '/Files/amazon_ad_inventories.pdf';
 
 export const CONNECT_ADVERTISERS: ConnectAdvertiser[] = [
   { displayName: 'A&E', pixelName: 'aen' },
@@ -75,8 +80,13 @@ export const CONNECT_AD_SERVERS: ConnectAdServer[] = [
     template: '-ttd.hrzn-nxt.com/pxl?cachebuster=%%TTD_CACHEBUSTER%%&advertiser_id=%%TTD_ADVERTISERID%%&campaign_id=%%TTD_CAMPAIGNID%%&publisher_id=%%TTD_PARTNERID%%&placement_id=%%TTD_ADGROUPID%%&creative_id=%%TTD_CREATIVEID%%',
   },
   {
-    key: 'AMAZON',
-    displayName: 'Amazon',
+    key: CONNECT_AMAZON_ADAPTER_KEY,
+    displayName: 'Amazon (Audio, FireTV, Display, OLV)',
+    template: '-amzn.hrzn-nxt.com/pxl?timestamp=${timestamp!}&advertiser_id={%advertiser_cfid}&campaign_id={%campaign_cfid}&campaign=[[CS_ENC_CAMPAIGN_NAME]]&site=[[CS_ENC_SITE_NAME]]&creative_id={%creative_cfid}&creative=[[CS_ENC_CREATIVE_NAME]]&ad_id={%ad_cfid}&device_type=[[CS_ENC_DEVICE_TYPE]]',
+  },
+  {
+    key: CONNECT_AMAZON_STANDARD_KEY,
+    displayName: 'Amazon (Streaming TV, Prime Video, Twitch)',
     template: '-amzn.hrzn-nxt.com/pxl?timestamp=${timestamp!}&advertiser_id={%advertiser_cfid}&campaign_id={%campaign_cfid}&campaign=[[CS_ENC_CAMPAIGN_NAME]]&site=[[CS_ENC_SITE_NAME]]&creative_id={%creative_cfid}&creative=[[CS_ENC_CREATIVE_NAME]]&ad_id={%ad_cfid}&device_type=[[CS_ENC_DEVICE_TYPE]]',
   },
 ];
@@ -120,6 +130,16 @@ export const AD_SERVERS: Record<string, AdServerDefinition> = {
       siteID: "{iv_publisherid}",
       placementID: "{iv_placementid}",
       creativeID: "{iv_creativeid}",
+    },
+  },
+  [LIVERAMP_AMAZON_PARTNER_KEY]: {
+    name: 'Amazon',
+    macros: {
+      advertiserID: '',
+      campaignID: '',
+      siteID: '',
+      placementID: '',
+      creativeID: '',
     },
   },
 };

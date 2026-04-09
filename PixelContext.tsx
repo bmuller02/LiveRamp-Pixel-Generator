@@ -1,6 +1,13 @@
 import React, { createContext, useContext, useState, ReactNode, useMemo } from 'react';
 import { PixelState, PixelStateMedia, PixelStateSite, HardcodeRow, GeneratorType } from './types';
-import { AD_SERVERS, HARD_CODE_PARTNER_KEY, CONNECT_AD_SERVERS } from './constants';
+import {
+  AD_SERVERS,
+  HARD_CODE_PARTNER_KEY,
+  CONNECT_AD_SERVERS,
+  CONNECT_AMAZON_ADAPTER_KEY,
+  AMAZON_ADAPTER_URL,
+  LIVERAMP_AMAZON_PARTNER_KEY,
+} from './constants';
 
 // Internal state for the wizard (looser than the strict PixelState)
 interface WizardState {
@@ -21,6 +28,8 @@ interface WizardState {
   connectAdvertiserDisplay: string;
   connectAdvertiserPixel: string;
   connectAdServerKey: string;
+  connectAmazonWarningAcknowledged: boolean;
+  mediaAmazonWarningAcknowledged: boolean;
 }
 
 interface PixelContextType {
@@ -29,11 +38,13 @@ interface PixelContextType {
   setLiveRampId: (id: string) => void;
   setPixelType: (type: 'MEDIA' | 'SITE') => void;
   setMediaPartner: (partner: string) => void;
+  acknowledgeMediaAmazonWarning: () => void;
   setHardcodeRows: (rows: HardcodeRow[]) => void;
   setSiteEvent: (field: 'type' | 'name' | 'value', value: string) => void;
   setAdvertiserName: (name: string) => void;
   setConnectAdvertiser: (displayName: string, pixelName: string) => void;
   setConnectAdServer: (key: string) => void;
+  acknowledgeConnectAmazonWarning: () => void;
   nextStep: () => void;
   prevStep: () => void;
   canAdvance: boolean;
@@ -63,12 +74,23 @@ export const PixelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     connectAdvertiserDisplay: '',
     connectAdvertiserPixel: '',
     connectAdServerKey: '',
+    connectAmazonWarningAcknowledged: false,
+    mediaAmazonWarningAcknowledged: false,
   });
 
   const setGeneratorType = (type: GeneratorType) => setState(prev => ({ ...prev, generatorType: type }));
   const setLiveRampId = (id: string) => setState(prev => ({ ...prev, liveRampId: id }));
   const setPixelType = (type: 'MEDIA' | 'SITE') => setState(prev => ({ ...prev, pixelType: type }));
-  const setMediaPartner = (partner: string) => setState(prev => ({ ...prev, mediaPartner: partner }));
+  const setMediaPartner = (partner: string) => {
+    setState(prev => ({
+      ...prev,
+      mediaPartner: partner,
+      mediaAmazonWarningAcknowledged: partner !== LIVERAMP_AMAZON_PARTNER_KEY,
+    }));
+  };
+  const acknowledgeMediaAmazonWarning = () => {
+    setState(prev => ({ ...prev, mediaAmazonWarningAcknowledged: true }));
+  };
   const setHardcodeRows = (rows: HardcodeRow[]) => setState(prev => ({ ...prev, hardcodeRows: rows }));
   const setSiteEvent = (field: 'type' | 'name' | 'value', value: string) => {
     setState(prev => ({
@@ -81,7 +103,24 @@ export const PixelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
     setState(prev => ({ ...prev, connectAdvertiserDisplay: displayName, connectAdvertiserPixel: pixelName }));
   };
   const setConnectAdServer = (key: string) => {
-    setState(prev => ({ ...prev, connectAdServerKey: prev.connectAdServerKey === key ? '' : key }));
+    setState(prev => {
+      if (prev.connectAdServerKey === key) {
+        return {
+          ...prev,
+          connectAdServerKey: '',
+          connectAmazonWarningAcknowledged: false,
+        };
+      }
+
+      return {
+        ...prev,
+        connectAdServerKey: key,
+        connectAmazonWarningAcknowledged: key !== CONNECT_AMAZON_ADAPTER_KEY,
+      };
+    });
+  };
+  const acknowledgeConnectAmazonWarning = () => {
+    setState(prev => ({ ...prev, connectAmazonWarningAcknowledged: true }));
   };
 
   const nextStep = () => setState(prev => ({ ...prev, step: prev.step + 1 }));
@@ -101,7 +140,11 @@ export const PixelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
 
     if (state.generatorType === 'CONNECT') {
       if (state.step === 2) return state.connectAdvertiserPixel !== '';
-      if (state.step === 3) return state.connectAdServerKey !== '';
+      if (state.step === 3) {
+        return state.connectAdServerKey !== '' && (
+          state.connectAdServerKey !== CONNECT_AMAZON_ADAPTER_KEY || state.connectAmazonWarningAcknowledged
+        );
+      }
       return true; // Step 4 is review
     }
 
@@ -117,6 +160,9 @@ export const PixelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         if (state.mediaPartner === HARD_CODE_PARTNER_KEY) {
           return state.hardcodeRows.length > 0;
         }
+        if (state.mediaPartner === LIVERAMP_AMAZON_PARTNER_KEY) {
+          return state.mediaAmazonWarningAcknowledged;
+        }
         return state.mediaPartner !== '' && !!AD_SERVERS[state.mediaPartner];
       }
       if (state.pixelType === 'SITE') {
@@ -131,6 +177,10 @@ export const PixelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
   }, [state]);
 
   const getConnectPixelUrl = (): string => {
+    if (state.connectAdServerKey === CONNECT_AMAZON_ADAPTER_KEY) {
+      return AMAZON_ADAPTER_URL;
+    }
+
     const advertiser = state.connectAdvertiserPixel || '{{ADVERTISER}}';
     const adServerDef = CONNECT_AD_SERVERS.find(s => s.key === state.connectAdServerKey);
     if (adServerDef) {
@@ -182,11 +232,13 @@ export const PixelProvider: React.FC<{ children: ReactNode }> = ({ children }) =
         setLiveRampId,
         setPixelType,
         setMediaPartner,
+        acknowledgeMediaAmazonWarning,
         setHardcodeRows,
         setSiteEvent,
         setAdvertiserName,
         setConnectAdvertiser,
         setConnectAdServer,
+        acknowledgeConnectAmazonWarning,
         nextStep,
         prevStep,
         canAdvance,
